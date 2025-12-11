@@ -3,14 +3,17 @@ const cors = require("cors");
 const connectDB = require("./Utls/connectDB");
 const port = 5000;
 const app = express();
-const userrouter = require("./Routes/userroutes");
 require("./Utls/cloudinary.config");
+const fs = require('fs');
+const userroutes = require("./Routes/userroutes");
+const shoproutes = require("./Routes/shoproutes");
 
 
 
 app.use(cors());
 app.use(express.json());
-app.use("/user", userrouter);
+app.use("/user", userroutes);
+app.use("/shop", shoproutes);
 
 const startServer = async () =>{
     try{
