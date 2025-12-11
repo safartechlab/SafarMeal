@@ -4,6 +4,7 @@ const connectDB = require("./Utls/connectDB");
 const port = 5000;
 const app = express();
 const userrouter = require("./Routes/userroutes");
+require("./Utls/cloudinary.config");
 
 
 
