@@ -378,9 +378,6 @@ const authverify = async (req, res) => {
   }
 };
 
-
-
-
 module.exports = {
   signup,
   signin,

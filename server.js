@@ -7,6 +7,7 @@ require("./Utls/cloudinary.config");
 const fs = require('fs');
 const userroutes = require("./Routes/userroutes");
 const shoproutes = require("./Routes/shoproutes");
+const itemroutes = require("./Routes/itemroutes");
 
 
 
@@ -14,6 +15,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/user", userroutes);
 app.use("/shop", shoproutes);
+app.use("/item",itemroutes);
 
 const startServer = async () =>{
     try{
