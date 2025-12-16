@@ -8,8 +8,8 @@ const UserSchema = new mongoose.Schema(
     password: { type: String, required: true },
     role: {
       type: String,
-      enum: ["user", "admin"],
-      default: "user",
+      enum: ["user", "shop", "admin"],
+      required : true,
     },
     
     resetPasswordOTP: { type: String },

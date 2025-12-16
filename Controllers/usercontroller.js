@@ -12,7 +12,7 @@ const signupSchema = Joi.object({
     .required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
-  role: Joi.string().valid("user", "admin").default("user"),
+  role: Joi.string().valid("user","shop", "admin"),
 });
 
 const signinSchema = Joi.object({
@@ -27,7 +27,7 @@ const updateSchema = Joi.object({
     .optional(),
   email: Joi.string().email().optional(),
   password: Joi.string().min(6).optional(),
-  role: Joi.string().valid("user", "admin").default("user"),
+  role: Joi.string().valid("user","shop", "admin"),
 });
 
 const signup = async (req, res) => {
