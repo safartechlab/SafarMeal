@@ -2,10 +2,11 @@ const Shop = require("../Models/shopmodel");
 const Joi = require("joi");
 const mongoose = require("mongoose");
 
+/* ================= VALIDATION ================= */
+
 const shopSchema = {
   create: Joi.object({
     shopname: Joi.string().min(2).required(),
-    owner: Joi.string().required(),
     city: Joi.string().required(),
     state: Joi.string().required(),
     address: Joi.string().required(),
@@ -18,24 +19,27 @@ const shopSchema = {
   }),
 };
 
-// ✅ ADD SHOP
+/* ================= ADD SHOP ================= */
+
 const addshop = async (req, res) => {
   try {
     const { error } = shopSchema.create.validate(req.body);
     if (error)
-      return res.status(400).json({
-        success: false,
-        message: error.details[0].message,
-      });
+      return res.status(400).json({ success: false, message: error.message });
 
-    if (!req.file) {
+    if (!req.file)
       return res.status(400).json({
         success: false,
         message: "Image is required",
       });
-    }
 
-    const shop = new Shop({
+    if (!req.user)
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+
+    const shop = await Shop.create({
       shopname: req.body.shopname,
       owner: req.user._id,
       city: req.body.city,
@@ -44,72 +48,64 @@ const addshop = async (req, res) => {
       image: req.file.path,
     });
 
-    await shop.save();
-    await shop.populate("owner", "username email");
-
     res.status(201).json({
       success: true,
       message: "Shop created successfully",
       data: shop,
     });
-  } catch (error) {
+  } catch (err) {
+    console.error("ADD SHOP ERROR:", err);
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: err.message,
     });
   }
 };
 
-// ✅ UPDATE SHOP
+/* ================= UPDATE SHOP ================= */
+
 const updateshop = async (req, res) => {
   try {
-    const { error } = shopSchema.update.validate(req.body);
-    if (error)
-      return res.status(400).json({
-        success: false,
-        message: error.details[0].message,
-      });
-
     const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id))
-      return res.status(400).json({
-        success: false,
-        message: "Invalid Shop ID",
-      });
 
-    if (req.file) {
-      req.body.image = req.file.path; // ✅ Cloudinary URL
-    }
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return res.status(400).json({ success: false, message: "Invalid shop ID" });
+
+    if (req.file) req.body.image = req.file.path;
 
     const updated = await Shop.findByIdAndUpdate(id, req.body, {
       new: true,
-    }).populate("owner", "username email");
+    });
 
     if (!updated)
-      return res.status(404).json({
-        success: false,
-        message: "Shop not found",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "Shop not found" });
 
     res.status(200).json({
       success: true,
       message: "Shop updated successfully",
       data: updated,
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  } catch (err) {
+    console.error("UPDATE SHOP ERROR:", err);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ✅ GET SHOP BY ID
+/* ================= GET SHOP BY ID ================= */
+
 const getshopbyID = async (req, res) => {
   try {
-    const shop = await Shop.findById(req.params.id)
-      .populate("owner", "username email phone")
-      .populate("items");
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return res.status(400).json({ success: false, message: "Invalid shop ID" });
+
+    const shop = await Shop.findById(id).populate(
+      "owner",
+      "username email phone"
+    );
 
     if (!shop)
       return res
@@ -117,45 +113,59 @@ const getshopbyID = async (req, res) => {
         .json({ success: false, message: "Shop not found" });
 
     res.status(200).json({ success: true, data: shop });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (err) {
+    console.error("GET SHOP ERROR:", err);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ✅ GET ALL SHOPS
+/* ================= GET ALL SHOPS ================= */
+
 const getallshop = async (req, res) => {
   try {
-    const shops = await Shop.find().populate("owner", "username email phone");
+    const shops = await Shop.find().populate(
+      "owner",
+      "username email phone"
+    );
 
     res.status(200).json({
       success: true,
       total: shops.length,
       data: shops,
     });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (err) {
+    console.error("GET ALL SHOPS ERROR:", err);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ✅ DELETE SHOP
+/* ================= DELETE SHOP ================= */
+
 const deleteshop = async (req, res) => {
   try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return res.status(400).json({ success: false, message: "Invalid shop ID" });
+
     const deleted = await Shop.findOneAndDelete({
-      _id: req.params.id,
-      owner: req.userId, // 🔒 secure
+      _id: id,
+      owner: req.user._id,
     });
 
     if (!deleted)
-      return res
-        .status(404)
-        .json({ success: false, message: "Shop not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Shop not found or not owned by you",
+      });
 
     res.status(200).json({
       success: true,
       message: "Shop deleted successfully",
     });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (err) {
+    console.error("DELETE SHOP ERROR:", err);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
