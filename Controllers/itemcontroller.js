@@ -280,10 +280,33 @@ const deleteItem = async (req, res) => {
   }
 };
 
+const getAllItems = async (req, res) => {
+  try {
+    const items = await Item.find()
+      .populate("shop", "shopname address") 
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: items,
+    });
+  } catch (error) {
+    console.error("Get All Items Error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+
+
 module.exports = {
   addItem,
   updateItem,
   getItemsByShop,
   getSingleItem,
   deleteItem,
+  getAllItems
 };

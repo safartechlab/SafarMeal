@@ -9,6 +9,7 @@ const {
   getItemsByShop,
   getSingleItem,
   deleteItem,
+  getAllItems
 } = require("../Controllers/itemcontroller");
 
 router.post("/addItem/:shopId", Auth, upload.single("foodimage"), addItem);
@@ -20,5 +21,8 @@ router.get("/getItems/:shopId", Auth, getItemsByShop);
 router.get("/getItem/:itemId", Auth, getSingleItem);
 
 router.delete("/deleteItem/:itemId", Auth, deleteItem);
+
+router.get("/getAllItems", getAllItems);
+
 
 module.exports = router;
